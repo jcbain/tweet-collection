@@ -1,0 +1,13 @@
+{
+  "name": "tweet-collection",
+  "version": "1.0.0",
+  "description": "\"an api to collect twitter data\"",
+  "main": "index.js",
+  "author": "James Bain",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "dotenv": "^8.2.0",
+    "pg": "^8.4.2"
+  }
+}

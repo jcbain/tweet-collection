@@ -1,0 +1,1 @@
+INSERT INTO tweets (id, tweet_text) VALUES (1, 'stuff right here');
