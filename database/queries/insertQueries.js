@@ -49,4 +49,22 @@ const insertIntoReferencedTweets = (client, queryString, row) => {
     })
 }
 
-module.exports = { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets }
+const insertIntoAllJobs = (client, row) => {
+    const { id } = row;
+    const job_query = `conversation_id:${id}`
+    const queryString = 'INSERT INTO all_jobs(query) VALUES($1)';
+    client.query(queryString, [job_query],
+        (err, res) => {
+            if (err) {
+                if(err.code === "23505") {
+                    console.log(`Error: metric ${job_query} already exists. Duplicate key violates unique key constraint`)
+                } else {
+                    console.log(err.stack)
+                }   
+            } else {
+                console.log(`🎉 🐕 SUCCESS: ${job_query} was added to the all_jobs table!`)
+            }
+        })
+}
+
+module.exports = { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets, insertIntoAllJobs }

@@ -1,22 +1,24 @@
-DROP TABLE IF EXISTS jobs CASCADE;
+DROP TABLE IF EXISTS main_jobs CASCADE;
+DROP TABLE IF EXISTS temp_jobs CASCADE;
+DROP TABLE IF EXISTS all_jobs CASCADE;
 DROP TABLE IF EXISTS tweets CASCADE;
 DROP TABLE IF EXISTS referenced_tweets;
 DROP TABLE IF EXISTS tweet_metrics;
 
 CREATE TABLE main_jobs (
     id SERIAL PRIMARY KEY,
-    query TEXT,
+    query TEXT UNIQUE,
     description_text TEXT
 );
 
 CREATE TABLE temp_jobs (
     id SERIAL PRIMARY KEY,
-    query TEXT
+    query TEXT UNIQUE
 );
 
 CREATE TABLE all_jobs (
     id SERIAL PRIMARY KEY,
-    query TEXT 
+    query TEXT UNIQUE
 );
 
 CREATE TABLE tweets (
@@ -28,9 +30,9 @@ CREATE TABLE tweets (
     lat DECIMAL,
     lng DECIMAL,
     lang TEXT,
-    job_id INT,
-    FOREIGN KEY (job_id) 
-        REFERENCES jobs (id)
+    job_query TEXT,
+    FOREIGN KEY (job_query) 
+        REFERENCES all_jobs (query)
 );
 
 CREATE TABLE referenced_tweets (
