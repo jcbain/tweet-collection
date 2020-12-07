@@ -3,11 +3,20 @@ DROP TABLE IF EXISTS tweets CASCADE;
 DROP TABLE IF EXISTS referenced_tweets;
 DROP TABLE IF EXISTS tweet_metrics;
 
-CREATE TABLE jobs (
+CREATE TABLE main_jobs (
     id SERIAL PRIMARY KEY,
     query TEXT,
-    last_run TIMESTAMP,
     description_text TEXT
+);
+
+CREATE TABLE temp_jobs (
+    id SERIAL PRIMARY KEY,
+    query TEXT
+);
+
+CREATE TABLE all_jobs (
+    id SERIAL PRIMARY KEY,
+    query TEXT 
 );
 
 CREATE TABLE tweets (

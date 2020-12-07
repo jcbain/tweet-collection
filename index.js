@@ -23,11 +23,14 @@ const runJob = (callback, options) => {
 
     const start = Date.now();
     const end = start + stopInterval;
+    let counter = 0;
     
     const job = new CronJob(
         interval,
         function() {
             callback();
+            console.log(counter);
+            counter += 1;
             if (Date.now() > end) {
                 this.stop()
             }
