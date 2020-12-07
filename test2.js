@@ -20,9 +20,10 @@ const runJobs = (callback, options) => {
         interval,
         function() {
             const tweetId = conversations.length > 0 ? conversations[conversationIndex].id : '';
-            callback(counter, `conversation_id:${tweetId}`);
+            const query = counter === 0 ? 'from:realdonaldtrump' : `conversation_id:${tweetId}`;
+            callback(query, counter === 0);
             counter += 1;
-            conversationIndex += 1;
+            conversationIndex = conversationIndex < conversations.length ? conversationIndex + 1 : 0;
             if (Date.now() > end) {
                 this.stop()
             }
@@ -34,68 +35,34 @@ const runJobs = (callback, options) => {
 
 }
 
-const someFunction = (endpointQuery='from:realdonaldtrump') => {
-
+const mainFunction = (endpointQuery, isParent) => {
     const tweetString = 'INSERT INTO tweets(id, tweet_text, author_id, created_at, conversation_id, lang, job_query) VALUES($1, $2, $3, $4, $5, $6, $7)';
     const metricsString = 'INSERT INTO tweet_metrics(tweet_id, collected_at, retweet_count, reply_count, like_count, quote_count) VALUES($1, $2, $3, $4, $5, $6)';
     const referenceString = 'INSERT INTO referenced_tweets(tweet_id, conversation_id, reference_type) VALUES($1, $2, $3)';
-        fetchTwitterData(endpointQuery, resp => {
-            pool.connect((err, client, done ) => {
-                if(err) throw `error: ${err}`;
-                try {
-                    const now = new Date;
-                    conversations = resp.data;
+
+    fetchTwitterData(endpointQuery, resp => {
+        pool.connect((err, client, done ) => {
+            if(err) throw `error: ${err}`;
+            try {
+                const now = new Date;
+                if(isParent) conversations = resp.data;
+                if(resp.data){
                     resp.data.forEach( (row, i) => {
                         insertIntoTweets(client, tweetString, row, endpointQuery)
                         insertIntoTweetMetrics(client, metricsString, row, now)
                         insertIntoReferencedTweets(client, referenceString, row)
-                        insertIntoAllJobs(client, row)
+                        if(isParent) insertIntoAllJobs(client, row)
                     })
-
-                } finally {
-                    done()
                 }
-            })
+            } finally {
+                done()
+            }
         })
+    })
 }
 
-const someFunction2 = (endpointQuery) => {
 
-    const tweetString = 'INSERT INTO tweets(id, tweet_text, author_id, created_at, conversation_id, lang, job_query) VALUES($1, $2, $3, $4, $5, $6, $7)';
-    const metricsString = 'INSERT INTO tweet_metrics(tweet_id, collected_at, retweet_count, reply_count, like_count, quote_count) VALUES($1, $2, $3, $4, $5, $6)';
-    const referenceString = 'INSERT INTO referenced_tweets(tweet_id, conversation_id, reference_type) VALUES($1, $2, $3)';
-        fetchTwitterData(endpointQuery, resp => {
-            pool.connect((err, client, done ) => {
-                if(err) throw `error: ${err}`;
-                try {
-                    const now = new Date;
-                    if(resp.data) {
-
-                        resp.data.forEach( (row, i) => {
-                            insertIntoTweets(client, tweetString, row, endpointQuery)
-                            insertIntoTweetMetrics(client, metricsString, row, now)
-                            insertIntoReferencedTweets(client, referenceString, row)
-                        })
-                    }
-
-                } finally {
-                    done()
-                }
-            })
-        })
-}
-
-const runFunction = (counter, newQuery) => {
-    if(counter === 0) {
-        someFunction('from:realdonaldtrump')
-    } else {
-        someFunction2(newQuery)
-    }
-    
-}
-
-// runJob(() => console.log("yuppers"), options)
-runJobs( runFunction, options )
+runJobs( mainFunction, options )
 
 // if from user you are wanting to pull tweets from, 
 // pull tweets
