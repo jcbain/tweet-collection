@@ -1,9 +1,9 @@
 const CronJob = require('cron').CronJob;
-const pool = require('./database/db');
-const { fetchTwitterData } = require('./endpoint_calls/twitter_search');
-const { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets, insertIntoAllJobs } = require('./database/queries/insertQueries');
+const pool = require('../database/db');
+const { fetchTwitterData } = require('../endpoint_calls/twitter_search');
+const { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets, insertIntoAllJobs } = require('../database/queries/insertQueries');
 
-const options = {interval: '* * * * *', stopInterval: 180000};
+const defaultOptions = {interval: '* * * * *', stopInterval: 180000};
 
 const runJobs = (callback, options) => {
     const { interval, stopInterval } = options;
@@ -30,10 +30,9 @@ const runJobs = (callback, options) => {
         true,
         'America/Edmonton'
     )
-
 }
 
-const mainFunction = (endpointQuery, isParent) => {
+const collectTweets = (endpointQuery, isParent) => {
     const tweetString = 'INSERT INTO tweets(id, tweet_text, author_id, created_at, conversation_id, lang, job_query) VALUES($1, $2, $3, $4, $5, $6, $7)';
     const metricsString = 'INSERT INTO tweet_metrics(tweet_id, collected_at, retweet_count, reply_count, like_count, quote_count) VALUES($1, $2, $3, $4, $5, $6)';
     const referenceString = 'INSERT INTO referenced_tweets(tweet_id, conversation_id, reference_type) VALUES($1, $2, $3)';
@@ -59,5 +58,4 @@ const mainFunction = (endpointQuery, isParent) => {
     })
 }
 
-
-runJobs( mainFunction, options )
+module.exports = { runJobs, collectTweets, defaultOptions };
