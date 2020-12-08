@@ -3,25 +3,31 @@ const pool = require('./database/db');
 const { fetchTwitterData } = require('./endpoint_calls/twitter_search');
 const { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets, insertIntoAllJobs } = require('./database/queries/insertQueries');
 
-const options = {interval: '* * * * *', stopInterval: 180000};
+const options = {interval: '* * * * *', stopInterval: 6000 * 60 * 3, runParentEvery: 6000 * 60};
 
 const runJobs = (callback, options) => {
-    const { interval, stopInterval } = options;
+    const { interval, stopInterval, runParentEvery } = options;
 
     const start = Date.now();
     const end = start + stopInterval;
     let counter = 0;
+
     conversations = []
     let conversationIndex = -1;
     
     const job = new CronJob(
         interval,
         function() {
+            console.log(`running for iteration: ${counter}`)
             const tweetId = conversations.length > 0 ? conversations[conversationIndex].id : '';
-            const query = counter === 0 ? 'from:realdonaldtrump' : `conversation_id:${tweetId}`;
-            callback(query, counter === 0);
+            let minuteCounter = ( counter ) * 6000;
+            const runParent = minuteCounter % runParentEvery === 0;
+            const query = runParent ? 'from:realdonaldtrump' : `conversation_id:${tweetId}`;
+            console.log(`running parent status: ${runParent}`)
+            console.log(query)
+            callback(query, runParent);
             counter += 1;
-            conversationIndex = conversationIndex < conversations.length ? conversationIndex + 1 : 0;
+            conversationIndex = conversationIndex < conversations.length - 1 ? conversationIndex + 1 : 0;
             if (Date.now() > end) {
                 this.stop()
             }
@@ -43,8 +49,10 @@ const mainFunction = (endpointQuery, isParent) => {
             if(err) throw `error: ${err}`;
             try {
                 const now = new Date;
-                if(isParent) conversations = resp.data;
+                if (isParent) conversations = resp.data;
+                console.log(resp.data)
                 if(resp.data){
+        
                     resp.data.forEach( (row, i) => {
                         insertIntoTweets(client, tweetString, row, endpointQuery)
                         insertIntoTweetMetrics(client, metricsString, row, now)
