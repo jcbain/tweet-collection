@@ -3,7 +3,7 @@ const pool = require('./database/db');
 const { fetchTwitterData } = require('./endpoint_calls/twitter_search');
 const { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets, insertIntoAllJobs } = require('./database/queries/insertQueries');
 
-const options = {interval: '* * * * *', stopInterval: 6000 * 60 * 3, runParentEvery: 6000 * 60};
+const options = {interval: '* * * * *', stopInterval: 1000 * 60 * 60 * 2, runParentEvery: 6000 * 60};
 
 const runJobs = (callback, options) => {
     const { interval, stopInterval, runParentEvery } = options;
@@ -19,8 +19,9 @@ const runJobs = (callback, options) => {
         interval,
         function() {
             console.log(`running for iteration: ${counter}`)
+            console.log(`Time now: ${Date.now()}, started at: ${start} and will stop after ${end}`)
             const tweetId = conversations.length > 0 ? conversations[conversationIndex].id : '';
-            let minuteCounter = ( counter ) * 6000;
+            let minuteCounter = ( counter ) * 60000;
             const runParent = minuteCounter % runParentEvery === 0;
             const query = runParent ? 'from:realdonaldtrump' : `conversation_id:${tweetId}`;
             console.log(`running parent status: ${runParent}`)
@@ -29,6 +30,7 @@ const runJobs = (callback, options) => {
             counter += 1;
             conversationIndex = conversationIndex < conversations.length - 1 ? conversationIndex + 1 : 0;
             if (Date.now() > end) {
+                console.log('stopping collection')
                 this.stop()
             }
         },
@@ -50,9 +52,8 @@ const mainFunction = (endpointQuery, isParent) => {
             try {
                 const now = new Date;
                 if (isParent) conversations = resp.data;
-                console.log(resp.data)
+                if(!resp.data) console.log('no data bub')
                 if(resp.data){
-        
                     resp.data.forEach( (row, i) => {
                         insertIntoTweets(client, tweetString, row, endpointQuery)
                         insertIntoTweetMetrics(client, metricsString, row, now)

@@ -3,10 +3,10 @@ const pool = require('../database/db');
 const { fetchTwitterData } = require('../endpoint_calls/twitter_search');
 const { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets, insertIntoAllJobs } = require('../database/queries/insertQueries');
 
-const defaultOptions = {interval: '* * * * *', stopInterval: 6000 * 60 * 3, runParentEvery: 6000 * 60};
+const defaultOptions = {interval: '* * * * *', stopInterval: 1000 * 60 * 60 * 3, runParentEvery: 1000 * 60 * 60, runQuery: 'from:realdonaldtrump'};
 
 const runJobs = (callback, options) => {
-    const { interval, stopInterval, runParentEvery } = options;
+    const { interval, stopInterval, runParentEvery, runQuery } = options;
 
     const start = Date.now();
     const end = start + stopInterval;
@@ -21,9 +21,9 @@ const runJobs = (callback, options) => {
         function() {
             console.log(`running for iteration: ${counter}`)
             const tweetId = conversations.length > 0 ? conversations[conversationIndex].id : '';
-            const minuteCounter = ( counter ) * 6000;
+            const minuteCounter = ( counter ) * 60000;
             const runParent = minuteCounter % runParentEvery === 0;
-            const query = runParent ? 'from:realdonaldtrump' : `conversation_id:${tweetId}`;
+            const query = runParent ? runQuery : `conversation_id:${tweetId}`;
             console.log(`running parent status: ${runParent}`)
             console.log(query)
             callback(query, runParent);
@@ -31,6 +31,7 @@ const runJobs = (callback, options) => {
             conversationIndex = conversationIndex < conversations.length - 1 ? conversationIndex + 1 : 0;
             if (Date.now() > end) {
                 this.stop()
+                console.log("Stopping Tweet Collection")
             }
         },
         null,

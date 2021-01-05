@@ -5,6 +5,7 @@ const pool = require('../database/db');
 const { fetchTwitterData } = require('../endpoint_calls/twitter_search');
 const { getAllJobs } = require('../database/queries/pullQueries')
 const { insertIntoTweets, insertIntoTweetMetrics, insertIntoReferencedTweets } = require('../database/queries/insertQueries');
+const { runJobs, collectTweets, defaultOptions } = require('../crons/collect_tweets_per_minute')
 
 const corsOptions = {
     origin: 'http://localhost:3000',
@@ -36,29 +37,9 @@ router.get('/:id', cors(corsOptions), (req, res) => {
 
 
 router.post('/:id', cors(corsOptions), (req, res) => {
-    const { query, jobId } = req.body;
-    const tweetString = 'INSERT INTO tweets(id, tweet_text, author_id, created_at, conversation_id, lang, job_id) VALUES($1, $2, $3, $4, $5, $6, $7)';
-    const metricsString = 'INSERT INTO tweet_metrics(tweet_id, collected_at, retweet_count, reply_count, like_count, quote_count) VALUES($1, $2, $3, $4, $5, $6)';
-    const referenceString = 'INSERT INTO referenced_tweets(tweet_id, conversation_id, reference_type) VALUES($1, $2, $3)';
-    fetchTwitterData(query, resp => {
-            pool.connect(( err, client, done ) => {
-                if (err) throw `error: ${err}`;
-                try {
-                    console.log("🔌 Connected to the db");
-                    const now = new Date;
-                    resp.data.forEach( (row, i) => {
-                        // if (i === 0) res.json(row)
-                        insertIntoTweets(client, tweetString, row, jobId)
-                        insertIntoTweetMetrics(client, metricsString, row, now)
-                        insertIntoReferencedTweets(client, referenceString, row)
-                    })
-
-                } finally {
-                    done()
-                }
-            });
-        })
-    
+    const { hours, query } = req.body;
+    const options = {...defaultOptions, stopInterval: 1000 * 60 * 60 * hours, runQuery: query}
+    runJobs( collectTweets, options )  
 })
 
 module.exports = router;
