@@ -38,6 +38,7 @@ router.get('/:id', cors(corsOptions), (req, res) => {
 
 router.post('/:id', cors(corsOptions), (req, res) => {
     const { hours, query } = req.body;
+    console.log(hours, query)
     const options = {...defaultOptions, stopInterval: 1000 * 60 * 60 * hours, runQuery: query}
     runJobs( collectTweets, options )  
 })
