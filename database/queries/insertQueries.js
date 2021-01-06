@@ -49,9 +49,10 @@ const insertIntoReferencedTweets = (client, queryString, row) => {
     })
 }
 
-const insertIntoAllJobs = (client, row) => {
+
+const insertIntoAllJobs = (client, row, manualRow) => {
     const { id } = row;
-    const jobQuery = `conversation_id:${id}`
+    const jobQuery = manualRow.length > 0 ? manualRow[0] : `conversation_id:${id}`
     const queryString = 'INSERT INTO all_jobs(query) VALUES($1)';
     client.query(queryString, [jobQuery],
         (err, res) => {

@@ -50,13 +50,14 @@ const collectTweets = (endpointQuery, isParent) => {
             if(err) throw `error: ${err}`;
             try {
                 const now = new Date;
+                insertIntoAllJobs(client, [], [endpointQuery])
                 if (isParent) conversations = resp.data;
                 if(resp.data){
                     resp.data.forEach( (row, i) => {
                         insertIntoTweets(client, tweetString, row, endpointQuery)
                         insertIntoTweetMetrics(client, metricsString, row, now)
                         insertIntoReferencedTweets(client, referenceString, row)
-                        if(isParent) insertIntoAllJobs(client, row)
+                        if(isParent) insertIntoAllJobs(client, row, [])
                     })
                 }
             } finally {
