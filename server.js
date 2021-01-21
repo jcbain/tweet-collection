@@ -6,13 +6,17 @@ const origin  = 'http://localhost:3000'
 const express = require("express");
 const app     = express();
 
-
-const tweetRouter = require('./routes/tweet_router');
-
-app.use(express.json())
-app.use('/', tweetRouter);
+const knex = require('./knex-database/db')
 
 
-app.listen(PORT, () => {
-    console.log(`🔥 Fired up on PORT ${PORT}`);
-});
+knex.select().table('tweets').then(rows => console.log(rows))
+
+// const tweetRouter = require('./routes/tweet_router');
+
+// app.use(express.json())
+// app.use('/', tweetRouter);
+
+
+// app.listen(PORT, () => {
+//     console.log(`🔥 Fired up on PORT ${PORT}`);
+// });

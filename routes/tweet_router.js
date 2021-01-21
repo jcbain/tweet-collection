@@ -13,6 +13,7 @@ const corsOptions = {
 }
 
 
+
 const getLatestJobTweets = async (pool, id) => {
     const client = await pool.connect(console.log("🔌 Connected to the db"))
     const query = "SELECT * FROM tweets WHERE job_id = $1 ORDER BY created_at DESC LIMIT 10";
