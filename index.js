@@ -1,5 +1,13 @@
 const yargs = require('yargs');
-const { fetchTwitterData } = require('./endpoint_calls/twitter_search_v2')
+const { CronJob } = require('cron');
+const { fetchTwitterData } = require('./endpoint_calls/twitter_search_v2');
+
+const start = Date.now();
+const intervals = {
+    s: "* * * * * *",
+    m: "* * * * *",
+    h: "* * * *"
+}
 
 const argv = yargs
     .option('query', {
@@ -7,17 +15,68 @@ const argv = yargs
         alias: 'q',
         type: 'string'
     })
+    .option('interval', {
+        description: 'how often to run the cron',
+        alias: 'i',
+        type: 'string'
+    })
+    .option('duration', {
+        description: 'duration in minutes to run collection for',
+        alias: 'd',
+        type: 'number'
+    })
     .help()
     .alias('help', 'h')
     .argv;
 
-if (argv.query) {
-    // console.log(argv.query)
-    // console.log("yup")
-    fetchTwitterData(argv.query)
-        .then(resp => console.log(resp.data))
-        .catch(err => `error: ${err}`)
+let chosenInterval = intervals.m;
+let end = start + (1000 * 60);
+let currentIndex = 0;
+let chosenQueries = ['from:npr'];
+
+const { query, interval, duration } = argv;
+
+if ( query ) {
+    chosenQueries = [query];
 }
+
+if ( interval ) {
+    switch(interval){
+        case 's':
+            chosenInterval = intervals.s;
+            break;
+        case 'm':
+            chosenInterval = intervals.m;
+            break;
+        case 'h':
+            chosenInterval = intervals.h;
+            break;
+        default:
+            console.log('running cron every minute');
+    }
+}
+
+if ( duration ) {
+    end = start + (1000 * 60 * duration);
+}
+
+
+const job = new CronJob(
+    chosenInterval,
+    function() {
+        console.log(chosenQueries[currentIndex])
+        currentIndex = currentIndex < chosenQueries.length - 1 ? currentIndex + 1 : 0;
+        // console.log(counter)
+        // counter+=1;
+        if(Date.now() > end){
+            this.stop();
+        }
+    },
+    null,
+    true,
+    'America/Edmonton'
+
+)
 
 // const knex = require('knex');
 // const knexConfig = require('./knex-database/knexfile');

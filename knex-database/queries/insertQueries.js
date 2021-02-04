@@ -21,11 +21,52 @@ const dummyData = [
     },
 ]
 
+function renameKeys(obj, newKeys) {
+    const keyValues = Object.keys(obj).map(key => {
+      const newKey = newKeys[key] || key;
+      return { [newKey]: obj[key] };
+    });
+    return Object.assign({}, ...keyValues);
+  }
+  
+
+const mappedKeys =  {
+    id: 'id',
+    text: 'tweet_text',
+    author_id: 'author_id',
+    created_at: 'created_at',
+};
+
+const list = [
+    {
+        id: '123',
+        text: 'some text',
+        author_id: 'akdjafads',
+        created_at: new Date()
+    },
+    {
+        id: '124',
+        text: 'some text again',
+        author_id: 'akdjafads',
+        created_at: new Date()
+    }
+]
+
 
 const insertIntoTweets = async (data) => {
-    console.log('inserting data into tweets');
-    await knex('tweets').insert(data).then(resp => console.log(resp));
+    let newData = [];
+    for( const row of data ){
+        const renamedObj = await renameKeys(row, mappedKeys);
+        newData.push(renamedObj)
+    }
+    return newData
 }
 
-insertIntoTweets(dummyData);
+// const insertIntoTweets = async (data) => {
+//     console.log('inserting data into tweets');
+//     await knex('tweets').insert(data).then(resp => console.log(resp));
+// }
 
+// insertIntoTweets(dummyData);
+
+insertIntoTweets(list).then(resp => console.log(resp))
