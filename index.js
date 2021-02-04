@@ -1,3 +1,24 @@
+const yargs = require('yargs');
+const { fetchTwitterData } = require('./endpoint_calls/twitter_search_v2')
+
+const argv = yargs
+    .option('query', {
+        description: 'query for twitter endpoint',
+        alias: 'q',
+        type: 'string'
+    })
+    .help()
+    .alias('help', 'h')
+    .argv;
+
+if (argv.query) {
+    // console.log(argv.query)
+    // console.log("yup")
+    fetchTwitterData(argv.query)
+        .then(resp => console.log(resp.data))
+        .catch(err => `error: ${err}`)
+}
+
 // const knex = require('knex');
 // const knexConfig = require('./knex-database/knexfile');
 // const db = knex(knexConfig.development);
