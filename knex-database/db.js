@@ -3,14 +3,16 @@ require('dotenv').config;
 const dbConfig = {
     user: process.env.USER,
     host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'twitter',
+    database: 'twitter',
     password: process.env.DB_PASS,
     port: 5432
 }
 
 const knex = require('knex')({
     client: 'pg',
-    connection: dbConfig
+    connection: dbConfig,
+    debug: true,
 });
+
 
 module.exports = knex;

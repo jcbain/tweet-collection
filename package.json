@@ -6,7 +6,8 @@
   "author": "James Bain",
   "license": "MIT",
   "scripts": {
-    "start": "./node_modules/.bin/nodemon server.js"
+    "start": "./node_modules/.bin/nodemon server.js",
+    "migrate:latest": "./node_modules/.bin/knex migrate:latest"
   },
   "dependencies": {
     "axios": "^0.21.0",
