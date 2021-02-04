@@ -7,7 +7,7 @@ module.exports = {
       connection: {
         user: process.env.USER,
         host: process.env.DB_HOST || 'localhost',
-        database: 'twitter',
+        database: 'twitter-dev',
         password: process.env.DB_PASS,
         port: 5432
       },

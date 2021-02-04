@@ -1,4 +1,8 @@
-const knex = require('../db');
+// const knex = require('../db');
+
+const knex = require('knex');
+const knexConfig = require('../knexfile');
+const db = knex(knexConfig.development);
 
 const dummyData = [
     {
@@ -40,7 +44,7 @@ const mappedKeys =  {
 
 const list = [
     {
-        id: '123',
+        id: '127',
         text: 'some text',
         author_id: 'akdjafads',
         created_at: new Date(),
@@ -56,7 +60,7 @@ const list = [
         }
     },
     {
-        id: '124',
+        id: '126',
         text: 'some text again',
         author_id: 'akdjafads',
         created_at: new Date(),
@@ -66,51 +70,45 @@ const list = [
     }
 ]
 
-const obj = {
-    name: 'james',
-    geo: {
-        place_id: "2595040ad5860917",
-        coordinates: {
-            type: "Point",
-            coordinates: [
-                -111.9927,
-                41.17666
-            ]
-        }
-    }
+
+
+const getGeo = (obj) => {
+    const { geo: { coordinates: { coordinates = null } = {coordinates: null} } = { geo: null }} = obj;
+    return coordinates;
 }
 
-const obj2 = {
-    name: 'james',
-    geo: {
-        place_id : "2595040ad5860917"
-    }
-}
 
-const { geo: { coordinates: { coordinates = null } = {coordinates: null} } = { geo: null }} = obj2;
-
-console.log(coordinates)
-
-
-const insertIntoTweets = async (data) => {
+const cleanUpTweetsData = (data) => {
     let newData = [];
-    for( const row of data ){
-        const renamedObj = await renameKeys(row, mappedKeys);
-        const { geo: { coordinates: { coordinates = null } = {coordinates: null} } = { geo: null }} = row;
+    for ( const row of data ){
+        const renamedObj = renameKeys(row, mappedKeys);
+        const coordinates = getGeo(row);
         if(coordinates){
             renamedObj.lng = coordinates[0];
             renamedObj.lat = coordinates[1];
+            
         }
+        delete renamedObj['geo']
         newData.push(renamedObj)
     }
-    return newData
+
+    return newData;
+
 }
+
+const insert = async (data, db) => {
+    const cleaned = cleanUpTweetsData(data)
+    const inserted = await db('tweets').insert(cleaned).onConflict('id')
+    .ignore()
+    return inserted;
+}
+
 
 // const insertIntoTweets = async (data) => {
 //     console.log('inserting data into tweets');
 //     await knex('tweets').insert(data).then(resp => console.log(resp));
 // }
 
-// insertIntoTweets(dummyData);
-
-insertIntoTweets(list).then(resp => console.log(resp))
+// console.log(cleanUpTweetsData(list))
+insert(list, db).then(resp => console.log(resp))
+// insertIntoTweets(list).then(resp => console.log(resp))
