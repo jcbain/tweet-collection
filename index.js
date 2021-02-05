@@ -1,11 +1,13 @@
 const yargs = require('yargs');
 const { CronJob } = require('cron');
+const { union } = require('lodash')
 const knex = require('knex');
 const knexConfig = require('./knexfile');
 const db = knex(knexConfig.development);
 
 const { insertIntoTweetsTable } = require('./knex-database/queries/insertQueries');
 const { fetchTwitterData } = require('./endpoint_calls/twitter_search_v2');
+const { createConversationIds } = require('./utils/helpers')
 
 const start = Date.now();
 const intervals = {
@@ -69,18 +71,26 @@ if ( duration ) {
 const job = new CronJob(
     chosenInterval,
     function() {
+        const isParent = currentIndex === 0;
         const currentQuery = chosenQueries[currentIndex];
-        currentIndex = currentIndex < chosenQueries.length - 1 ? currentIndex + 1 : 0;
+        console.log(chosenQueries)
+        console.log(`collecting tweets with query ${currentQuery}`)
         fetchTwitterData(currentQuery)
             .then(resp => {
-                insertIntoTweetsTable(resp.data.data, db)
-                    .catch(err => {
-                        console.log(err)
-                    })
+                if (resp.data.data){
+                    insertIntoTweetsTable(resp.data.data, db)
+                        .catch(err => {
+                            console.log(err)
+                        })
+                    if (isParent){
+                        const conversationIds = createConversationIds(resp.data.data);
+                        chosenQueries = union(chosenQueries, conversationIds)
+                    }   
+                }
+                currentIndex = currentIndex < chosenQueries.length - 1 ? currentIndex + 1 : 0;
+              
             })
             .catch(err => console.log(err))
-        // console.log(counter)
-        // counter+=1;
         if(Date.now() > end){
             db.destroy();
             this.stop();
@@ -91,59 +101,3 @@ const job = new CronJob(
     'America/Edmonton'
 
 )
-
-// const knex = require('knex');
-// const knexConfig = require('./knex-database/knexfile');
-// const db = knex(knexConfig.development);
-
-// db.select('id').from('tweets').then(resp => console.log(resp))
-
-// const CronJob = require('cron').CronJob;
-
-// // const start = Date.now()
-// // const end = start + 30000;
-// // let stopped = false;
-
-// // const job = new CronJob(
-// // 	'* * * * * *',
-// // 	function() {
-// //         console.log('You will see this message every second');
-// //         if(Date.now() > end) {
-// //             this.stop()
-// //         }
-// // 	},
-// // 	null,
-// // 	true,
-// // 	'America/Edmonton'
-// // );
-
-
-// const runJob = (callback, options) => {
-//     const { interval, stopInterval } = options;
-
-//     const start = Date.now();
-//     const end = start + stopInterval;
-//     let counter = 0;
-    
-//     const job = new CronJob(
-//         interval,
-//         function() {
-//             callback();
-//             console.log(counter);
-//             counter += 1;
-//             if (Date.now() > end) {
-//                 this.stop()
-//             }
-//         },
-//         null,
-//         true,
-//         'America/Edmonton'
-//     )
-
-// }
-
-// // const options = {interval: '* * * * * *', stopInterval: 30000};
-
-// // runJob(() => console.log("yuppers"), options)
-
-// module.exports = { runJob }

@@ -11,4 +11,9 @@ const getGeo = (obj) => {
     return coordinates;
 }
 
-module.exports = { renameKeys, getGeo }
+const createConversationIds = (data) => {
+    const conversationIds = data.map((tweet) => `conversation_id:${tweet.id}`);
+    return conversationIds
+}
+
+module.exports = { renameKeys, getGeo, createConversationIds }

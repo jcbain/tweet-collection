@@ -1,9 +1,4 @@
-// const knex = require('../db');
-
-// const knex = require('knex');
 const { pick } = require('lodash')
-// const knexConfig = require('../knexfile');
-// const db = knex(knexConfig.development);
 const { renameKeys, getGeo } = require('../../utils/helpers');
 
 const cleanUpTweetsData = (data) => {
@@ -28,7 +23,6 @@ const cleanUpTweetsData = (data) => {
     }
 
     return cleanedData;
-
 }
 
 const insertIntoTweetsTable = async (data, db) => {
@@ -42,7 +36,5 @@ const insertIntoTweetsTable = async (data, db) => {
         .ignore()
     return inserted;
 }
-
-
 
 module.exports = { insertIntoTweetsTable }
