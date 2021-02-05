@@ -1,5 +1,10 @@
 const yargs = require('yargs');
 const { CronJob } = require('cron');
+const knex = require('knex');
+const knexConfig = require('./knexfile');
+const db = knex(knexConfig.development);
+
+const { insertIntoTweetsTable } = require('./knex-database/queries/insertQueries');
 const { fetchTwitterData } = require('./endpoint_calls/twitter_search_v2');
 
 const start = Date.now();
@@ -64,11 +69,20 @@ if ( duration ) {
 const job = new CronJob(
     chosenInterval,
     function() {
-        console.log(chosenQueries[currentIndex])
+        const currentQuery = chosenQueries[currentIndex];
         currentIndex = currentIndex < chosenQueries.length - 1 ? currentIndex + 1 : 0;
+        fetchTwitterData(currentQuery)
+            .then(resp => {
+                insertIntoTweetsTable(resp.data.data, db)
+                    .catch(err => {
+                        console.log(err)
+                    })
+            })
+            .catch(err => console.log(err))
         // console.log(counter)
         // counter+=1;
         if(Date.now() > end){
+            db.destroy();
             this.stop();
         }
     },
