@@ -10,6 +10,6 @@ exports.up = function(knex, Promise) {
 }
 
 exports.down = function(knex, Promise) {
-    return knex.schema.dropTableIfExists('referenced_tweets');
+    return knex.schema.dropTable('referenced_tweets');
 };
 

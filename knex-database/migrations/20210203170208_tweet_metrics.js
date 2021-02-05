@@ -14,5 +14,5 @@ exports.up = function(knex, Promise) {
 }
 
 exports.down = function(knex, Promise) {
-    return knex.schema.dropTableIfExists('tweet_metrics');
+    return knex.schema.dropTable('tweet_metrics');
 };
