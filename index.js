@@ -5,7 +5,7 @@ const knex = require('knex');
 const knexConfig = require('./knexfile');
 const db = knex(knexConfig.development);
 
-const { insertIntoTweetsTable } = require('./knex-database/queries/insertQueries');
+const { insertIntoTweetsTable, insertIntoReferencedTweetsTable, insertIntoTweetsMetricsTable } = require('./knex-database/queries/insertQueries');
 const { fetchTwitterData } = require('./endpoint_calls/twitter_search_v2');
 const { createConversationIds } = require('./utils/helpers')
 
@@ -76,16 +76,28 @@ const job = new CronJob(
         console.log(chosenQueries)
         console.log(`collecting tweets with query ${currentQuery}`)
         fetchTwitterData(currentQuery)
-            .then(resp => {
+            .then(async resp => {
                 if (resp.data.data){
-                    insertIntoTweetsTable(resp.data.data, db)
+
+                    await insertIntoTweetsTable(resp.data.data, currentQuery, db)
                         .catch(err => {
                             console.log(err)
                         })
+
                     if (isParent){
                         const conversationIds = createConversationIds(resp.data.data);
                         chosenQueries = union(chosenQueries, conversationIds)
-                    }   
+                    }
+                    
+                    await insertIntoReferencedTweetsTable(resp.data.data, db)
+                        .catch(err => {
+                            console.log(err)
+                        })
+
+                    await insertIntoTweetsMetricsTable(resp.data.data, db)
+                        .catch(err => {
+                            console.log(err)
+                        })
                 }
                 currentIndex = currentIndex < chosenQueries.length - 1 ? currentIndex + 1 : 0;
               

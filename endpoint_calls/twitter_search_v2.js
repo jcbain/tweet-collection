@@ -7,7 +7,7 @@ const headers = { headers: { AUTHORIZATION : `Bearer ${bearer}`} };
 const defaultTweetFields = [
     'id','text','author_id','context_annotations',
     'geo','conversation_id','withheld','possibly_sensitive',
-    'referenced_tweets'
+    'referenced_tweets', 'public_metrics'
 ];
 
 const fetchTwitterData = async (query, tweetFields = defaultTweetFields) => {
