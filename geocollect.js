@@ -1,6 +1,5 @@
 const yargs = require('yargs');
 const { CronJob } = require('cron');
-const { union } = require('lodash')
 const knex = require('knex');
 const knexConfig = require('./knexfile');
 const db = knex(knexConfig.development);
@@ -35,10 +34,10 @@ const argv = yargs
     .alias('help', 'h')
     .argv;
 
+let nextToken;
 let chosenInterval = intervals.m;
 let end = start + (1000 * 60);
-let currentIndex = 0;
-let chosenQueries = ['from:npr'];
+
 
 const { query, interval, duration } = argv;
 
@@ -69,9 +68,34 @@ if ( duration ) {
 const job = new CronJob(
     chosenInterval, 
     function() {
-        fetchTwitterGeoData('james', '123dfs')
+        const query = 'point_radius:[-73.5673 45.5017 25mi] immigration'
+        fetchTwitterGeoData(query, nextToken, true, '2015')
+            .then(async resp => {
+
+                if (resp.data.data) {
+                    await insertIntoTweetsTable(resp.data.data, query, db)
+                    .catch(err => {
+                        console.log(err)
+                    })
+
+                await insertIntoReferencedTweetsTable(resp.data.data, db)
+                .catch(err => {
+                    console.log(err)
+                })
+
+                await insertIntoTweetsMetricsTable(resp.data.data, db)
+                    .catch(err => {
+                        console.log(err)
+                    })
+
+                }
+                if(resp.data.meta.next_token){
+                    nextToken = resp.data.meta.next_token
+                }
+            })
+
         if(Date.now() > end){
-            // db.destroy();
+            db.destroy();
             this.stop();
         }
     },
